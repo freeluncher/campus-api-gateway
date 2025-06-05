@@ -21,11 +21,10 @@ const TaskSchema = new mongoose.Schema({
         default: 'belum',
         required: true
     },
-    mahasiswa: {
+    mahasiswa: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true
-    }
+    }]
 }, {
     timestamps: true
 });

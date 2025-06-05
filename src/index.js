@@ -24,6 +24,9 @@ app.use('/api/tugas', taskRoutes);
 const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
 
+const enrollmentRoutes = require('./routes/enrollment');
+app.use('/api/enrollment', enrollmentRoutes);
+
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,

@@ -13,11 +13,11 @@ const { authenticate, authorize } = require('../controllers/authMiddleware');
 // GET /api/tugas
 router.get('/', authenticate, getAllTasks);
 // POST /api/tugas
-router.post('/', authenticate, authorize('mahasiswa', 'admin'), validateTask, addTask);
+router.post('/', authenticate, authorize('dosen', 'admin'), validateTask, addTask);
 // GET /api/tugas/:id
 router.get('/:id', authenticate, getTaskById);
 // PUT /api/tugas/:id
-router.put('/:id', authenticate, authorize('mahasiswa', 'admin'), validateTask, updateTask);
+router.put('/:id', authenticate, authorize('dosen', 'admin'), validateTask, updateTask);
 // DELETE /api/tugas/:id
 router.delete('/:id', authenticate, authorize('admin'), deleteTask);
 
