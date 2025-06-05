@@ -16,10 +16,10 @@ const attendanceRoutes = require('./routes/presence');
 app.use('/api/attendance', attendanceRoutes);
 
 const scheduleRoutes = require('./routes/schedule');
-app.use('/api/jadwal', scheduleRoutes);
+app.use('/api/schedule', scheduleRoutes);
 
 const taskRoutes = require('./routes/task');
-app.use('/api/tugas', taskRoutes);
+app.use('/api/task', taskRoutes);
 
 const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
