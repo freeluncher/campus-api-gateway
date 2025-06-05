@@ -7,7 +7,8 @@ const EnrollmentSchema = new mongoose.Schema({
         required: true
     },
     matkul: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Course',
         required: true
     },
     dosen: {

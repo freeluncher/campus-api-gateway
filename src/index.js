@@ -27,6 +27,9 @@ app.use('/api/auth', authRoutes);
 const enrollmentRoutes = require('./routes/enrollment');
 app.use('/api/enrollment', enrollmentRoutes);
 
+const enrollmentAdminRoutes = require('./routes/enrollment.admin');
+app.use('/api/enrollment/admin', enrollmentAdminRoutes);
+
 const userRoutes = require('./routes/user');
 app.use('/api/user', userRoutes);
 
