@@ -30,6 +30,14 @@ const addAttendance = async (req, res) => {
     }
     try {
         const { student, course, date, status } = req.body;
+        // Cek user role (hanya student yang boleh submit presensi)
+        if (!req.user || req.user.role !== 'student') {
+            return res.status(403).json({
+                error: 'Only students are allowed to submit attendance.',
+                code: 'FORBIDDEN_ROLE',
+                detail: 'Attendance can only be submitted by users with student role.'
+            });
+        }
         // Cek hari libur/nasional
         const presensiDate = new Date(date);
         const holiday = await Holiday.findOne({ date: {
@@ -74,21 +82,20 @@ const addAttendance = async (req, res) => {
         const currentDay = days[presensiDate.getDay()];
         const pad = n => n.toString().padStart(2, '0');
         const currentTime = pad(presensiDate.getHours()) + ':' + pad(presensiDate.getMinutes());
-        // Cari jadwal yang cocok
+        // Cari jadwal yang cocok (harus ada jadwal di hari itu)
         const schedule = await Schedule.findOne({
             course,
             day: currentDay
         });
         if (!schedule) {
             return res.status(403).json({
-                error: 'Attendance is not allowed at this time. Out of schedule.',
-                code: 'OUT_OF_SCHEDULE',
-                detail: `No schedule found for course on ${currentDay}`
+                error: 'No schedule found for this course on this day.',
+                code: 'NO_SCHEDULE_TODAY',
+                detail: `No schedule for course on ${currentDay}`
             });
         }
         // Validasi range waktu presensi (misal: 10 menit sebelum sampai 15 menit setelah jam mulai)
         const [startHour, startMinute] = schedule.startTime.split(':').map(Number);
-        const [endHour, endMinute] = schedule.endTime.split(':').map(Number);
         const presensiMinutes = presensiDate.getHours() * 60 + presensiDate.getMinutes();
         const scheduleStartMinutes = startHour * 60 + startMinute - 10; // 10 menit sebelum
         const scheduleEndMinutes = startHour * 60 + startMinute + 15; // 15 menit setelah mulai
