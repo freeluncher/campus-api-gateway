@@ -1,4 +1,4 @@
-const Attendance = require('../models/presence');
+const Attendance = require('../models/attendance');
 const { body, validationResult } = require('express-validator');
 
 // Validation and sanitization for attendance

@@ -7,7 +7,7 @@ const {
     updateAttendance,
     deleteAttendance,
     validateAttendance
-} = require('../controllers/presenceController');
+} = require('../controllers/attendanceController');
 const { authenticate, authorize } = require('../controllers/authMiddleware');
 
 // GET /api/attendance
