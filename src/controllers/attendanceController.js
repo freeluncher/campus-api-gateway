@@ -1,9 +1,12 @@
 const Attendance = require('../models/attendance');
+const Enrollment = require('../models/enrollment');
+const Schedule = require('../models/schedule');
 const { body, validationResult } = require('express-validator');
 
 // Validation and sanitization for attendance
 const validateAttendance = [
     body('student').trim().notEmpty().withMessage('Student is required'),
+    body('course').trim().notEmpty().withMessage('Course is required'),
     body('date').isISO8601().withMessage('Date must be in ISO8601 format (YYYY-MM-DD)'),
     body('status').isIn(['present', 'permission', 'sick', 'absent']).withMessage('Invalid status'),
 ];
@@ -18,15 +21,39 @@ const getAllAttendance = async (req, res) => {
     }
 };
 
-// Add new attendance
+// Add new attendance with schedule validation
 const addAttendance = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
     try {
-        const { student, date, status } = req.body;
-        const newData = new Attendance({ student, date, status });
+        const { student, course, date, status } = req.body;
+        // Cek apakah mahasiswa sudah enroll di course ini
+        const enroll = await Enrollment.findOne({ student, course });
+        if (!enroll) {
+            return res.status(403).json({ error: 'You are not enrolled in this course.' });
+        }
+        // Validasi waktu presensi terhadap jadwal
+        // Ambil hari dan jam dari tanggal presensi
+        const presensiDate = new Date(date);
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const currentDay = days[presensiDate.getDay()];
+        // Format jam:menit, misal '09:30'
+        const pad = n => n.toString().padStart(2, '0');
+        const currentTime = pad(presensiDate.getHours()) + ':' + pad(presensiDate.getMinutes());
+        // Cari jadwal yang cocok
+        const schedule = await Schedule.findOne({
+            course,
+            day: currentDay,
+            startTime: { $lte: currentTime },
+            endTime: { $gte: currentTime }
+        });
+        if (!schedule) {
+            return res.status(403).json({ error: 'Attendance is not allowed at this time. Out of schedule.' });
+        }
+        // Simpan attendance jika valid
+        const newData = new Attendance({ student, course, date, status });
         await newData.save();
         res.status(201).json(newData);
     } catch (err) {
