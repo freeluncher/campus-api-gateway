@@ -8,16 +8,17 @@ const {
     deleteSchedule,
     validateSchedule
 } = require('../controllers/scheduleController');
+const { authenticate, authorize } = require('../controllers/authMiddleware');
 
 // GET /api/jadwal
-router.get('/', getAllSchedules);
+router.get('/', authenticate, getAllSchedules);
 // POST /api/jadwal
-router.post('/', validateSchedule, addSchedule);
+router.post('/', authenticate, authorize('dosen', 'admin'), validateSchedule, addSchedule);
 // GET /api/jadwal/:id
-router.get('/:id', getScheduleById);
+router.get('/:id', authenticate, getScheduleById);
 // PUT /api/jadwal/:id
-router.put('/:id', validateSchedule, updateSchedule);
+router.put('/:id', authenticate, authorize('dosen', 'admin'), validateSchedule, updateSchedule);
 // DELETE /api/jadwal/:id
-router.delete('/:id', deleteSchedule);
+router.delete('/:id', authenticate, authorize('admin'), deleteSchedule);
 
 module.exports = router;

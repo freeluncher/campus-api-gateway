@@ -8,16 +8,17 @@ const {
     deleteTask,
     validateTask
 } = require('../controllers/taskController');
+const { authenticate, authorize } = require('../controllers/authMiddleware');
 
 // GET /api/tugas
-router.get('/', getAllTasks);
+router.get('/', authenticate, getAllTasks);
 // POST /api/tugas
-router.post('/', validateTask, addTask);
+router.post('/', authenticate, authorize('mahasiswa', 'admin'), validateTask, addTask);
 // GET /api/tugas/:id
-router.get('/:id', getTaskById);
+router.get('/:id', authenticate, getTaskById);
 // PUT /api/tugas/:id
-router.put('/:id', validateTask, updateTask);
+router.put('/:id', authenticate, authorize('mahasiswa', 'admin'), validateTask, updateTask);
 // DELETE /api/tugas/:id
-router.delete('/:id', deleteTask);
+router.delete('/:id', authenticate, authorize('admin'), deleteTask);
 
 module.exports = router;

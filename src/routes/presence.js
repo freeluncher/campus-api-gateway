@@ -8,16 +8,17 @@ const {
     deletePresensi,
     validatePresensi
 } = require('../controllers/presenceController');
+const { authenticate, authorize } = require('../controllers/authMiddleware');
 
 // GET /api/presensi
-router.get('/', getAllPresensi);
+router.get('/', authenticate, getAllPresensi);
 // POST /api/presensi
-router.post('/', validatePresensi, addPresensi);
+router.post('/', authenticate, authorize('mahasiswa', 'admin'), validatePresensi, addPresensi);
 // GET /api/presensi/:id
-router.get('/:id', getPresensiById);
+router.get('/:id', authenticate, getPresensiById);
 // PUT /api/presensi/:id
-router.put('/:id', validatePresensi, updatePresensi);
+router.put('/:id', authenticate, authorize('mahasiswa', 'admin'), validatePresensi, updatePresensi);
 // DELETE /api/presensi/:id
-router.delete('/:id', deletePresensi);
+router.delete('/:id', authenticate, authorize('admin'), deletePresensi);
 
 module.exports = router;

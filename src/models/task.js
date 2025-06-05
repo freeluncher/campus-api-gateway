@@ -22,9 +22,9 @@ const TaskSchema = new mongoose.Schema({
         required: true
     },
     mahasiswa: {
-        type: String,
-        required: true,
-        trim: true
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
     }
 }, {
     timestamps: true
