@@ -7,11 +7,11 @@ const CourseSchema = new mongoose.Schema({
         unique: true,
         trim: true
     },
-    lecturer: {
+    lecturers: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
-    },
+    }],
     academicYear: {
         type: String,
         required: true

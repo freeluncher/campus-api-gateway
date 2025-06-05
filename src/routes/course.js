@@ -21,7 +21,7 @@ router.get('/available', authenticate, authorize('student'), async (req, res) =>
         const enrolled = await Enrollment.find({ student: req.user.id });
         const takenCourses = enrolled.map(e => e.course.toString());
         filter._id = { $nin: takenCourses };
-        const data = await require('../models/course').find(filter).populate('lecturer', '-password');
+        const data = await require('../models/course').find(filter).populate('lecturers', '-password');
         res.json(data);
     } catch (err) {
         res.status(500).json({ error: err.message });
