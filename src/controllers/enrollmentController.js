@@ -4,9 +4,6 @@ const { body, validationResult } = require('express-validator');
 
 const validateEnrollment = [
     body('matkul').isMongoId().withMessage('Matkul harus berupa ObjectId course valid'),
-    body('mahasiswa').optional().isMongoId().withMessage('Mahasiswa harus berupa ObjectId user valid'),
-    body('tahunAjaran').trim().notEmpty().withMessage('Tahun ajaran wajib diisi'),
-    body('semester').isIn(['ganjil', 'genap']).withMessage('Semester harus ganjil/genap'),
 ];
 
 // Mahasiswa memilih matkul (enroll)
