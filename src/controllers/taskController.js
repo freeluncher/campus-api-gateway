@@ -1,5 +1,6 @@
 const Task = require('../models/task');
 const Enrollment = require('../models/enrollment');
+const Course = require('../models/course');
 const { body, validationResult } = require('express-validator');
 
 // Validasi dan sanitasi input untuk tugas
@@ -31,12 +32,16 @@ const addTask = async (req, res) => {
     }
     try {
         const { title, description, deadline, status, course, academicYear, semester } = req.body;
-        // Ambil id dosen dari req.user (asumsi dosen login)
         const lecturerId = req.user.id;
-        // Cari semua mahasiswa yang enroll matkul ini dengan dosen ini di tahun ajaran & semester tsb
+        // Cek apakah dosen yang login adalah salah satu lecturers di course
+        const courseData = await Course.findById(course);
+        if (!courseData) return res.status(404).json({ error: 'Course not found' });
+        if (!courseData.lecturers.map(id => id.toString()).includes(lecturerId)) {
+            return res.status(403).json({ error: 'You are not a lecturer for this course.' });
+        }
+        // Cari semua mahasiswa yang enroll course ini di academicYear & semester
         const enrollments = await Enrollment.find({
             course,
-            lecturer: lecturerId,
             academicYear,
             semester
         });

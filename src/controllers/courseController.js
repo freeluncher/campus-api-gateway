@@ -3,7 +3,8 @@ const { body, validationResult } = require('express-validator');
 
 const validateCourse = [
     body('name').trim().notEmpty().withMessage('Course name is required'),
-    body('lecturer').isMongoId().withMessage('Lecturer must be a valid user ObjectId'),
+    body('lecturers').isArray({ min: 1 }).withMessage('At least one lecturer is required'),
+    body('lecturers.*').isMongoId().withMessage('Each lecturer must be a valid user ObjectId'),
     body('academicYear').trim().notEmpty().withMessage('Academic year is required'),
     body('semester').isIn(['odd', 'even']).withMessage('Semester must be odd/even'),
 ];
@@ -14,7 +15,7 @@ const getAllCourses = async (req, res) => {
         const filter = {};
         if (req.query.academicYear) filter.academicYear = req.query.academicYear;
         if (req.query.semester) filter.semester = req.query.semester;
-        const data = await Course.find(filter).populate('lecturer', '-password');
+        const data = await Course.find(filter).populate('lecturers', '-password');
         res.json(data);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -24,7 +25,7 @@ const getAllCourses = async (req, res) => {
 // Get course by ID
 const getCourseById = async (req, res) => {
     try {
-        const data = await Course.findById(req.params.id).populate('lecturer', '-password');
+        const data = await Course.findById(req.params.id).populate('lecturers', '-password');
         if (!data) return res.status(404).json({ error: 'Course not found' });
         res.json(data);
     } catch (err) {
@@ -39,10 +40,10 @@ const createCourse = async (req, res) => {
         return res.status(400).json({ errors: errors.array() });
     }
     try {
-        const { name, lecturer, academicYear, semester } = req.body;
+        const { name, lecturers, academicYear, semester } = req.body;
         const exist = await Course.findOne({ name, academicYear, semester });
         if (exist) return res.status(400).json({ error: 'Course already exists for this academic year/semester' });
-        const course = new Course({ name, lecturer, academicYear, semester });
+        const course = new Course({ name, lecturers, academicYear, semester });
         await course.save();
         res.status(201).json(course);
     } catch (err) {
@@ -57,12 +58,12 @@ const updateCourse = async (req, res) => {
         return res.status(400).json({ errors: errors.array() });
     }
     try {
-        const { name, lecturer, academicYear, semester } = req.body;
+        const { name, lecturers, academicYear, semester } = req.body;
         const course = await Course.findByIdAndUpdate(
             req.params.id,
-            { name, lecturer, academicYear, semester },
+            { name, lecturers, academicYear, semester },
             { new: true, runValidators: true }
-        ).populate('lecturer', '-password');
+        ).populate('lecturers', '-password');
         if (!course) return res.status(404).json({ error: 'Course not found' });
         res.json(course);
     } catch (err) {
