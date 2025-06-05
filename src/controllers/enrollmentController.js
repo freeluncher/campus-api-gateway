@@ -1,10 +1,10 @@
 const Enrollment = require('../models/enrollment');
+const Course = require('../models/course');
 const { body, validationResult } = require('express-validator');
 
 const validateEnrollment = [
-    body('mahasiswa').isMongoId().withMessage('Mahasiswa harus berupa ObjectId user valid'),
-    body('matkul').trim().notEmpty().withMessage('Matkul wajib diisi'),
-    body('dosen').isMongoId().withMessage('Dosen harus berupa ObjectId user valid'),
+    body('matkul').isMongoId().withMessage('Matkul harus berupa ObjectId course valid'),
+    body('mahasiswa').optional().isMongoId().withMessage('Mahasiswa harus berupa ObjectId user valid'),
     body('tahunAjaran').trim().notEmpty().withMessage('Tahun ajaran wajib diisi'),
     body('semester').isIn(['ganjil', 'genap']).withMessage('Semester harus ganjil/genap'),
 ];
@@ -16,11 +16,15 @@ const enrollMatkul = async (req, res) => {
         return res.status(400).json({ errors: errors.array() });
     }
     try {
-        const { mahasiswa, matkul, dosen, tahunAjaran, semester } = req.body;
+        const { matkul } = req.body;
+        const mahasiswa = req.user.id;
+        // Ambil data course
+        const course = await Course.findById(matkul);
+        if (!course) return res.status(404).json({ error: 'Matkul tidak ditemukan' });
         // Cek duplikat
-        const exist = await Enrollment.findOne({ mahasiswa, matkul, dosen, tahunAjaran, semester });
+        const exist = await Enrollment.findOne({ mahasiswa, matkul, tahunAjaran: course.tahunAjaran, semester: course.semester });
         if (exist) return res.status(400).json({ error: 'Sudah terdaftar di matkul ini' });
-        const data = new Enrollment({ mahasiswa, matkul, dosen, tahunAjaran, semester });
+        const data = new Enrollment({ mahasiswa, matkul, dosen: course.dosen, tahunAjaran: course.tahunAjaran, semester: course.semester });
         await data.save();
         res.status(201).json(data);
     } catch (err) {

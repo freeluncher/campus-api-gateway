@@ -30,6 +30,9 @@ app.use('/api/enrollment', enrollmentRoutes);
 const userRoutes = require('./routes/user');
 app.use('/api/user', userRoutes);
 
+const courseRoutes = require('./routes/course');
+app.use('/api/course', courseRoutes);
+
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
