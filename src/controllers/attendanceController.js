@@ -1,6 +1,7 @@
 const Attendance = require('../models/attendance');
 const Enrollment = require('../models/enrollment');
 const Schedule = require('../models/schedule');
+const Holiday = require('../models/holiday');
 const { body, validationResult } = require('express-validator');
 
 // Validation and sanitization for attendance
@@ -29,6 +30,19 @@ const addAttendance = async (req, res) => {
     }
     try {
         const { student, course, date, status } = req.body;
+        // Cek hari libur/nasional
+        const presensiDate = new Date(date);
+        const holiday = await Holiday.findOne({ date: {
+            $gte: new Date(presensiDate.setHours(0,0,0,0)),
+            $lte: new Date(presensiDate.setHours(23,59,59,999))
+        }});
+        if (holiday) {
+            return res.status(403).json({
+                error: 'Attendance is not allowed on a holiday.',
+                code: 'HOLIDAY',
+                detail: `Holiday: ${holiday.description}`
+            });
+        }
         // Check if student is enrolled in the course and enrollment is active
         const enroll = await Enrollment.findOne({ student, course, status: 'active' });
         if (!enroll) {
@@ -56,7 +70,6 @@ const addAttendance = async (req, res) => {
             });
         }
         // Validate attendance time against schedule
-        const presensiDate = new Date(date);
         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         const currentDay = days[presensiDate.getDay()];
         const pad = n => n.toString().padStart(2, '0');
