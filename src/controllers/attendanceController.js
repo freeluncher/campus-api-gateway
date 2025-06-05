@@ -3,6 +3,20 @@ const Enrollment = require('../models/enrollment');
 const Schedule = require('../models/schedule');
 const Holiday = require('../models/holiday');
 const { body, validationResult } = require('express-validator');
+const multer = require('multer');
+const path = require('path');
+
+// Setup multer for file upload (for permission/sick proof)
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, path.join(__dirname, '../uploads/attendance'));
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + '-' + file.originalname);
+    }
+});
+const upload = multer({ storage });
 
 // Validation and sanitization for attendance
 const validateAttendance = [
@@ -106,8 +120,20 @@ const addAttendance = async (req, res) => {
                 detail: `Attendance allowed from ${pad(Math.floor(scheduleStartMinutes/60))}:${pad(scheduleStartMinutes%60)} to ${pad(Math.floor(scheduleEndMinutes/60))}:${pad(scheduleEndMinutes%60)}`
             });
         }
-        // Simpan attendance jika valid
-        const newData = new Attendance({ student, course, date, status });
+        // If status is 'permission' or 'sick', require file proof
+        let proofFile = null;
+        if (['permission', 'sick'].includes(status)) {
+            if (!req.file) {
+                return res.status(400).json({
+                    error: 'Proof file is required for permission or sick status.',
+                    code: 'PROOF_REQUIRED',
+                    detail: 'Please upload a file as proof.'
+                });
+            }
+            proofFile = req.file.filename;
+        }
+        // Save attendance with proofFile if available
+        const newData = new Attendance({ student, course, date, status, proof: proofFile });
         await newData.save();
         res.status(201).json({
             message: 'Attendance recorded successfully.',
@@ -166,5 +192,6 @@ module.exports = {
     getAttendanceById,
     updateAttendance,
     deleteAttendance,
-    validateAttendance
+    validateAttendance,
+    upload
 };

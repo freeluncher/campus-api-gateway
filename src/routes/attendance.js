@@ -6,14 +6,15 @@ const {
     getAttendanceById,
     updateAttendance,
     deleteAttendance,
-    validateAttendance
+    validateAttendance,
+    upload
 } = require('../controllers/attendanceController');
 const { authenticate, authorize } = require('../controllers/authMiddleware');
 
 // GET /api/attendance
 router.get('/', authenticate, getAllAttendance);
-// POST /api/attendance
-router.post('/', authenticate, authorize('student', 'admin'), validateAttendance, addAttendance);
+// POST /api/attendance (with file upload for permission/sick)
+router.post('/', authenticate, authorize('student'), upload.single('proof'), validateAttendance, addAttendance);
 // GET /api/attendance/:id
 router.get('/:id', authenticate, getAttendanceById);
 // PUT /api/attendance/:id

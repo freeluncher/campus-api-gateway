@@ -19,6 +19,10 @@ const AttendanceSchema = new mongoose.Schema({
         type: String,
         enum: ['present', 'permission', 'sick', 'absent'],
         required: true
+    },
+    proof: {
+        type: String,
+        required: false
     }
 }, {
     timestamps: true
