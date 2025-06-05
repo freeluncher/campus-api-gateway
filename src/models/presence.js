@@ -1,22 +1,22 @@
 const mongoose = require('mongoose');
 
-const PresensiSchema = new mongoose.Schema({
-    mahasiswa: {
+const AttendanceSchema = new mongoose.Schema({
+    student: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
     },
-    tanggal: {
+    date: {
         type: Date,
         required: true
     },
     status: {
         type: String,
-        enum: ['hadir', 'izin', 'sakit', 'alpa'],
+        enum: ['present', 'permission', 'sick', 'absent'],
         required: true
     }
 }, {
     timestamps: true
 });
 
-module.exports = mongoose.model('Presensi', PresensiSchema);
+module.exports = mongoose.model('Attendance', AttendanceSchema);

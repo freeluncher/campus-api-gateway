@@ -10,15 +10,15 @@ const {
 } = require('../controllers/scheduleController');
 const { authenticate, authorize } = require('../controllers/authMiddleware');
 
-// GET /api/jadwal
+// GET /api/schedule
 router.get('/', authenticate, getAllSchedules);
-// POST /api/jadwal
-router.post('/', authenticate, authorize('dosen', 'admin'), validateSchedule, addSchedule);
-// GET /api/jadwal/:id
+// POST /api/schedule
+router.post('/', authenticate, authorize('lecturer', 'admin'), validateSchedule, addSchedule);
+// GET /api/schedule/:id
 router.get('/:id', authenticate, getScheduleById);
-// PUT /api/jadwal/:id
-router.put('/:id', authenticate, authorize('dosen', 'admin'), validateSchedule, updateSchedule);
-// DELETE /api/jadwal/:id
+// PUT /api/schedule/:id
+router.put('/:id', authenticate, authorize('lecturer', 'admin'), validateSchedule, updateSchedule);
+// DELETE /api/schedule/:id
 router.delete('/:id', authenticate, authorize('admin'), deleteSchedule);
 
 module.exports = router;

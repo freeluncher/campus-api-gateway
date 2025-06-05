@@ -12,8 +12,8 @@ app.use(json({ limit: '10kb' })); // batasi body max 10kb
 app.use(urlencoded({ extended: true, limit: '10kb' }));
 
 // Routes
-const presensiRoutes = require('./routes/presence');
-app.use('/api/presensi', presensiRoutes);
+const attendanceRoutes = require('./routes/presence');
+app.use('/api/attendance', attendanceRoutes);
 
 const scheduleRoutes = require('./routes/schedule');
 app.use('/api/jadwal', scheduleRoutes);

@@ -1,24 +1,24 @@
 const mongoose = require('mongoose');
 
 const CourseSchema = new mongoose.Schema({
-    nama: {
+    name: {
         type: String,
         required: true,
         unique: true,
         trim: true
     },
-    dosen: {
+    lecturer: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
     },
-    tahunAjaran: {
+    academicYear: {
         type: String,
         required: true
     },
     semester: {
         type: String,
-        enum: ['ganjil', 'genap'],
+        enum: ['odd', 'even'],
         required: true
     }
 }, {

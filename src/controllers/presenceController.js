@@ -1,86 +1,86 @@
-const Presensi = require('../models/presence');
+const Attendance = require('../models/presence');
 const { body, validationResult } = require('express-validator');
 
-// Validasi dan sanitasi input untuk presensi
-const validatePresensi = [
-    body('mahasiswa').trim().notEmpty().withMessage('Nama mahasiswa wajib diisi'),
-    body('tanggal').isISO8601().withMessage('Tanggal wajib format ISO8601 (YYYY-MM-DD)'),
-    body('status').isIn(['hadir', 'izin', 'sakit', 'alpa']).withMessage('Status tidak valid'),
+// Validation and sanitization for attendance
+const validateAttendance = [
+    body('student').trim().notEmpty().withMessage('Student is required'),
+    body('date').isISO8601().withMessage('Date must be in ISO8601 format (YYYY-MM-DD)'),
+    body('status').isIn(['present', 'permission', 'sick', 'absent']).withMessage('Invalid status'),
 ];
 
-// Get all presensi
-const getAllPresensi = async (req, res) => {
+// Get all attendance
+const getAllAttendance = async (req, res) => {
     try {
-        const data = await Presensi.find().sort({ tanggal: -1 });
+        const data = await Attendance.find().sort({ date: -1 });
         res.json(data);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 };
 
-// Add new presensi
-const addPresensi = async (req, res) => {
+// Add new attendance
+const addAttendance = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
     try {
-        const { mahasiswa, tanggal, status } = req.body;
-        const newData = new Presensi({ mahasiswa, tanggal, status });
+        const { student, date, status } = req.body;
+        const newData = new Attendance({ student, date, status });
         await newData.save();
         res.status(201).json(newData);
     } catch (err) {
-        res.status(500).json({ error: 'Terjadi kesalahan pada server.' });
+        res.status(500).json({ error: 'Server error.' });
     }
 };
 
-// Get presensi by ID
-const getPresensiById = async (req, res) => {
+// Get attendance by ID
+const getAttendanceById = async (req, res) => {
     try {
-        const data = await Presensi.findById(req.params.id);
-        if (!data) return res.status(404).json({ error: 'Data tidak ditemukan' });
+        const data = await Attendance.findById(req.params.id);
+        if (!data) return res.status(404).json({ error: 'Data not found' });
         res.json(data);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 };
 
-// Update presensi by ID
-const updatePresensi = async (req, res) => {
+// Update attendance by ID
+const updateAttendance = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
     try {
-        const { mahasiswa, tanggal, status } = req.body;
-        const updated = await Presensi.findByIdAndUpdate(
+        const { student, date, status } = req.body;
+        const updated = await Attendance.findByIdAndUpdate(
             req.params.id,
-            { mahasiswa, tanggal, status },
+            { student, date, status },
             { new: true, runValidators: true }
         );
-        if (!updated) return res.status(404).json({ error: 'Data tidak ditemukan' });
+        if (!updated) return res.status(404).json({ error: 'Data not found' });
         res.json(updated);
     } catch (err) {
-        res.status(500).json({ error: 'Terjadi kesalahan pada server.' });
+        res.status(500).json({ error: 'Server error.' });
     }
 };
 
-// Delete presensi by ID
-const deletePresensi = async (req, res) => {
+// Delete attendance by ID
+const deleteAttendance = async (req, res) => {
     try {
-        const deleted = await Presensi.findByIdAndDelete(req.params.id);
-        if (!deleted) return res.status(404).json({ error: 'Data tidak ditemukan' });
-        res.json({ message: 'Data berhasil dihapus' });
+        const deleted = await Attendance.findByIdAndDelete(req.params.id);
+        if (!deleted) return res.status(404).json({ error: 'Data not found' });
+        res.json({ message: 'Data deleted successfully' });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 };
 
 module.exports = {
-    getAllPresensi,
-    addPresensi,
-    getPresensiById,
-    updatePresensi,
-    deletePresensi,
-    validatePresensi
+    getAllAttendance,
+    addAttendance,
+    getAttendanceById,
+    updateAttendance,
+    deleteAttendance,
+    validateAttendance
 };

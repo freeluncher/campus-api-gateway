@@ -13,11 +13,11 @@ const UserSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['mahasiswa', 'dosen', 'admin'],
-        default: 'mahasiswa',
+        enum: ['student', 'lecturer', 'admin'],
+        default: 'student',
         required: true
     },
-    nama: {
+    name: {
         type: String,
         required: true,
         trim: true
