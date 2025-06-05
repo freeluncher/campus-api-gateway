@@ -21,6 +21,9 @@ app.use('/api/jadwal', scheduleRoutes);
 const taskRoutes = require('./routes/task');
 app.use('/api/tugas', taskRoutes);
 
+const authRoutes = require('./routes/auth');
+app.use('/api/auth', authRoutes);
+
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,

@@ -7,9 +7,9 @@ const ScheduleSchema = new mongoose.Schema({
         trim: true
     },
     dosen: {
-        type: String,
-        required: true,
-        trim: true
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
     },
     ruang: {
         type: String,
