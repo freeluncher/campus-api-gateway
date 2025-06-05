@@ -29,20 +29,21 @@ const addAttendance = async (req, res) => {
     }
     try {
         const { student, course, date, status } = req.body;
-        // Cek apakah mahasiswa sudah enroll di course ini
+        // Check if student is enrolled in the course
         const enroll = await Enrollment.findOne({ student, course });
         if (!enroll) {
-            return res.status(403).json({ error: 'You are not enrolled in this course.' });
+            return res.status(403).json({
+                error: 'You are not enrolled in this course.',
+                code: 'NOT_ENROLLED',
+                detail: 'Student must be enrolled in the course to submit attendance.'
+            });
         }
-        // Validasi waktu presensi terhadap jadwal
-        // Ambil hari dan jam dari tanggal presensi
+        // Validate attendance time against schedule
         const presensiDate = new Date(date);
         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         const currentDay = days[presensiDate.getDay()];
-        // Format jam:menit, misal '09:30'
         const pad = n => n.toString().padStart(2, '0');
         const currentTime = pad(presensiDate.getHours()) + ':' + pad(presensiDate.getMinutes());
-        // Cari jadwal yang cocok
         const schedule = await Schedule.findOne({
             course,
             day: currentDay,
@@ -50,14 +51,21 @@ const addAttendance = async (req, res) => {
             endTime: { $gte: currentTime }
         });
         if (!schedule) {
-            return res.status(403).json({ error: 'Attendance is not allowed at this time. Out of schedule.' });
+            return res.status(403).json({
+                error: 'Attendance is not allowed at this time. Out of schedule.',
+                code: 'OUT_OF_SCHEDULE',
+                detail: `No schedule found for course on ${currentDay} at ${currentTime}`
+            });
         }
-        // Simpan attendance jika valid
+        // Save attendance if valid
         const newData = new Attendance({ student, course, date, status });
         await newData.save();
-        res.status(201).json(newData);
+        res.status(201).json({
+            message: 'Attendance recorded successfully.',
+            data: newData
+        });
     } catch (err) {
-        res.status(500).json({ error: 'Server error.' });
+        res.status(500).json({ error: 'Server error.', code: 'SERVER_ERROR', detail: err.message });
     }
 };
 
