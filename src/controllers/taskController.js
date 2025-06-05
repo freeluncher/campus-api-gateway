@@ -1,4 +1,5 @@
 const Task = require('../models/task');
+const Enrollment = require('../models/enrollment');
 const { body, validationResult } = require('express-validator');
 
 // Validasi dan sanitasi input untuk tugas
@@ -7,7 +8,9 @@ const validateTask = [
     body('deskripsi').trim().notEmpty().withMessage('Deskripsi wajib diisi'),
     body('deadline').isISO8601().withMessage('Deadline wajib format ISO8601 (YYYY-MM-DD)'),
     body('status').optional().isIn(['belum', 'proses', 'selesai']).withMessage('Status tidak valid'),
-    body('mahasiswa').trim().notEmpty().withMessage('Nama mahasiswa wajib diisi'),
+    body('matkul').trim().notEmpty().withMessage('Matkul wajib diisi'),
+    body('tahunAjaran').trim().notEmpty().withMessage('Tahun ajaran wajib diisi'),
+    body('semester').isIn(['ganjil', 'genap']).withMessage('Semester harus ganjil/genap'),
 ];
 
 // Get all tasks
@@ -20,14 +23,27 @@ const getAllTasks = async (req, res) => {
     }
 };
 
-// Add new task
+// Add new task (otomatisasi penugasan ke seluruh mahasiswa yang diajar dosen)
 const addTask = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
     try {
-        const { judul, deskripsi, deadline, status, mahasiswa } = req.body;
+        const { judul, deskripsi, deadline, status, matkul, tahunAjaran, semester } = req.body;
+        // Ambil id dosen dari req.user (asumsi dosen login)
+        const dosenId = req.user.id;
+        // Cari semua mahasiswa yang enroll matkul ini dengan dosen ini di tahun ajaran & semester tsb
+        const enrollments = await Enrollment.find({
+            matkul,
+            dosen: dosenId,
+            tahunAjaran,
+            semester
+        });
+        if (!enrollments.length) {
+            return res.status(400).json({ error: 'Tidak ada mahasiswa yang terdaftar di matkul ini.' });
+        }
+        const mahasiswa = enrollments.map(e => e.mahasiswa);
         const newData = new Task({ judul, deskripsi, deadline, status, mahasiswa });
         await newData.save();
         res.status(201).json(newData);
