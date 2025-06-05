@@ -21,7 +21,7 @@ const getAllAttendance = async (req, res) => {
     }
 };
 
-// Add new attendance with schedule validation
+// Add new attendance with schedule validation and detailed validation
 const addAttendance = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -29,13 +29,30 @@ const addAttendance = async (req, res) => {
     }
     try {
         const { student, course, date, status } = req.body;
-        // Check if student is enrolled in the course
-        const enroll = await Enrollment.findOne({ student, course });
+        // Check if student is enrolled in the course and enrollment is active
+        const enroll = await Enrollment.findOne({ student, course, status: 'active' });
         if (!enroll) {
             return res.status(403).json({
-                error: 'You are not enrolled in this course.',
-                code: 'NOT_ENROLLED',
-                detail: 'Student must be enrolled in the course to submit attendance.'
+                error: 'You are not actively enrolled in this course.',
+                code: 'NOT_ACTIVE_ENROLLMENT',
+                detail: 'Student must have an active enrollment to submit attendance.'
+            });
+        }
+        // Cek duplikat presensi pada hari yang sama dan course yang sama
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0,0,0,0);
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23,59,59,999);
+        const alreadyPresent = await Attendance.findOne({
+            student,
+            course,
+            date: { $gte: startOfDay, $lte: endOfDay }
+        });
+        if (alreadyPresent) {
+            return res.status(400).json({
+                error: 'Attendance already submitted for this course and date.',
+                code: 'ALREADY_PRESENT',
+                detail: 'Duplicate attendance is not allowed.'
             });
         }
         // Validate attendance time against schedule
@@ -44,20 +61,32 @@ const addAttendance = async (req, res) => {
         const currentDay = days[presensiDate.getDay()];
         const pad = n => n.toString().padStart(2, '0');
         const currentTime = pad(presensiDate.getHours()) + ':' + pad(presensiDate.getMinutes());
+        // Cari jadwal yang cocok
         const schedule = await Schedule.findOne({
             course,
-            day: currentDay,
-            startTime: { $lte: currentTime },
-            endTime: { $gte: currentTime }
+            day: currentDay
         });
         if (!schedule) {
             return res.status(403).json({
                 error: 'Attendance is not allowed at this time. Out of schedule.',
                 code: 'OUT_OF_SCHEDULE',
-                detail: `No schedule found for course on ${currentDay} at ${currentTime}`
+                detail: `No schedule found for course on ${currentDay}`
             });
         }
-        // Save attendance if valid
+        // Validasi range waktu presensi (misal: 10 menit sebelum sampai 15 menit setelah jam mulai)
+        const [startHour, startMinute] = schedule.startTime.split(':').map(Number);
+        const [endHour, endMinute] = schedule.endTime.split(':').map(Number);
+        const presensiMinutes = presensiDate.getHours() * 60 + presensiDate.getMinutes();
+        const scheduleStartMinutes = startHour * 60 + startMinute - 10; // 10 menit sebelum
+        const scheduleEndMinutes = startHour * 60 + startMinute + 15; // 15 menit setelah mulai
+        if (presensiMinutes < scheduleStartMinutes || presensiMinutes > scheduleEndMinutes) {
+            return res.status(403).json({
+                error: 'Attendance not allowed outside allowed time window.',
+                code: 'OUT_OF_TIME_WINDOW',
+                detail: `Attendance allowed from ${pad(Math.floor(scheduleStartMinutes/60))}:${pad(scheduleStartMinutes%60)} to ${pad(Math.floor(scheduleEndMinutes/60))}:${pad(scheduleEndMinutes%60)}`
+            });
+        }
+        // Simpan attendance jika valid
         const newData = new Attendance({ student, course, date, status });
         await newData.save();
         res.status(201).json({

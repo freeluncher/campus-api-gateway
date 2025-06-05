@@ -44,4 +44,22 @@ const getEnrollments = async (req, res) => {
     }
 };
 
-module.exports = { enrollCourse, getEnrollments, validateEnrollment };
+// Drop course (student)
+const dropCourse = async (req, res) => {
+    try {
+        const student = req.user.id;
+        const { course } = req.body;
+        // Hanya bisa drop jika enrollment masih aktif
+        const enrollment = await Enrollment.findOne({ student, course, status: 'active' });
+        if (!enrollment) {
+            return res.status(404).json({ error: 'Active enrollment not found or already dropped.' });
+        }
+        enrollment.status = 'dropped';
+        await enrollment.save();
+        res.json({ message: 'Course dropped successfully.', enrollment });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+module.exports = { enrollCourse, getEnrollments, validateEnrollment, dropCourse };
