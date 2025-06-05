@@ -5,17 +5,18 @@ const {
     addPresensi,
     getPresensiById,
     updatePresensi,
-    deletePresensi
+    deletePresensi,
+    validatePresensi
 } = require('../controllers/presenceController');
 
 // GET /api/presensi
 router.get('/', getAllPresensi);
 // POST /api/presensi
-router.post('/', addPresensi);
+router.post('/', validatePresensi, addPresensi);
 // GET /api/presensi/:id
 router.get('/:id', getPresensiById);
 // PUT /api/presensi/:id
-router.put('/:id', updatePresensi);
+router.put('/:id', validatePresensi, updatePresensi);
 // DELETE /api/presensi/:id
 router.delete('/:id', deletePresensi);
 
