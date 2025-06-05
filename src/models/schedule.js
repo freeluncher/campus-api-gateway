@@ -1,31 +1,31 @@
 const mongoose = require('mongoose');
 
 const ScheduleSchema = new mongoose.Schema({
-    matkul: {
+    course: {
         type: String,
         required: true,
         trim: true
     },
-    dosen: {
+    lecturer: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
     },
-    ruang: {
+    room: {
         type: String,
         required: true,
         trim: true
     },
-    hari: {
+    day: {
         type: String,
         required: true,
-        enum: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
+        enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
     },
-    jamMulai: {
+    startTime: {
         type: String,
         required: true
     },
-    jamSelesai: {
+    endTime: {
         type: String,
         required: true
     }

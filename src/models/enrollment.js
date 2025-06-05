@@ -1,28 +1,28 @@
 const mongoose = require('mongoose');
 
 const EnrollmentSchema = new mongoose.Schema({
-    mahasiswa: {
+    student: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
     },
-    matkul: {
+    course: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Course',
         required: true
     },
-    dosen: {
+    lecturer: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
     },
-    tahunAjaran: {
+    academicYear: {
         type: String,
         required: true
     },
     semester: {
         type: String,
-        enum: ['ganjil', 'genap'],
+        enum: ['odd', 'even'],
         required: true
     }
 }, {

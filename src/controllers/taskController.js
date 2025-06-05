@@ -4,13 +4,13 @@ const { body, validationResult } = require('express-validator');
 
 // Validasi dan sanitasi input untuk tugas
 const validateTask = [
-    body('judul').trim().notEmpty().withMessage('Judul wajib diisi'),
-    body('deskripsi').trim().notEmpty().withMessage('Deskripsi wajib diisi'),
-    body('deadline').isISO8601().withMessage('Deadline wajib format ISO8601 (YYYY-MM-DD)'),
-    body('status').optional().isIn(['belum', 'proses', 'selesai']).withMessage('Status tidak valid'),
-    body('matkul').trim().notEmpty().withMessage('Matkul wajib diisi'),
-    body('tahunAjaran').trim().notEmpty().withMessage('Tahun ajaran wajib diisi'),
-    body('semester').isIn(['ganjil', 'genap']).withMessage('Semester harus ganjil/genap'),
+    body('title').trim().notEmpty().withMessage('Title is required'),
+    body('description').trim().notEmpty().withMessage('Description is required'),
+    body('deadline').isISO8601().withMessage('Deadline must be in ISO8601 format (YYYY-MM-DD)'),
+    body('status').optional().isIn(['not_started', 'in_progress', 'completed']).withMessage('Invalid status'),
+    body('course').trim().notEmpty().withMessage('Course is required'),
+    body('academicYear').trim().notEmpty().withMessage('Academic year is required'),
+    body('semester').isIn(['odd', 'even']).withMessage('Semester must be odd/even'),
 ];
 
 // Get all tasks
@@ -30,25 +30,25 @@ const addTask = async (req, res) => {
         return res.status(400).json({ errors: errors.array() });
     }
     try {
-        const { judul, deskripsi, deadline, status, matkul, tahunAjaran, semester } = req.body;
+        const { title, description, deadline, status, course, academicYear, semester } = req.body;
         // Ambil id dosen dari req.user (asumsi dosen login)
-        const dosenId = req.user.id;
+        const lecturerId = req.user.id;
         // Cari semua mahasiswa yang enroll matkul ini dengan dosen ini di tahun ajaran & semester tsb
         const enrollments = await Enrollment.find({
-            matkul,
-            dosen: dosenId,
-            tahunAjaran,
+            course,
+            lecturer: lecturerId,
+            academicYear,
             semester
         });
         if (!enrollments.length) {
-            return res.status(400).json({ error: 'Tidak ada mahasiswa yang terdaftar di matkul ini.' });
+            return res.status(400).json({ error: 'No students enrolled in this course.' });
         }
-        const mahasiswa = enrollments.map(e => e.mahasiswa);
-        const newData = new Task({ judul, deskripsi, deadline, status, mahasiswa });
+        const students = enrollments.map(e => e.student);
+        const newData = new Task({ title, description, deadline, status, students });
         await newData.save();
         res.status(201).json(newData);
     } catch (err) {
-        res.status(500).json({ error: 'Terjadi kesalahan pada server.' });
+        res.status(500).json({ error: 'Server error.' });
     }
 };
 
@@ -56,7 +56,7 @@ const addTask = async (req, res) => {
 const getTaskById = async (req, res) => {
     try {
         const data = await Task.findById(req.params.id);
-        if (!data) return res.status(404).json({ error: 'Data tidak ditemukan' });
+        if (!data) return res.status(404).json({ error: 'Data not found' });
         res.json(data);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -70,16 +70,16 @@ const updateTask = async (req, res) => {
         return res.status(400).json({ errors: errors.array() });
     }
     try {
-        const { judul, deskripsi, deadline, status, mahasiswa } = req.body;
+        const { title, description, deadline, status, students } = req.body;
         const updated = await Task.findByIdAndUpdate(
             req.params.id,
-            { judul, deskripsi, deadline, status, mahasiswa },
+            { title, description, deadline, status, students },
             { new: true, runValidators: true }
         );
-        if (!updated) return res.status(404).json({ error: 'Data tidak ditemukan' });
+        if (!updated) return res.status(404).json({ error: 'Data not found' });
         res.json(updated);
     } catch (err) {
-        res.status(500).json({ error: 'Terjadi kesalahan pada server.' });
+        res.status(500).json({ error: 'Server error.' });
     }
 };
 
@@ -87,8 +87,8 @@ const updateTask = async (req, res) => {
 const deleteTask = async (req, res) => {
     try {
         const deleted = await Task.findByIdAndDelete(req.params.id);
-        if (!deleted) return res.status(404).json({ error: 'Data tidak ditemukan' });
-        res.json({ message: 'Data berhasil dihapus' });
+        if (!deleted) return res.status(404).json({ error: 'Data not found' });
+        res.json({ message: 'Data deleted successfully' });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

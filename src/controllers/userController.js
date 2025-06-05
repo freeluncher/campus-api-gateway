@@ -1,12 +1,12 @@
-const User = require('../models/user');
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
+const User = require('../models/user');
 
 const validateUser = [
-    body('username').trim().notEmpty().withMessage('Username wajib diisi'),
-    body('password').optional().isLength({ min: 6 }).withMessage('Password minimal 6 karakter'),
-    body('role').isIn(['mahasiswa', 'dosen', 'admin']).withMessage('Role tidak valid'),
-    body('nama').trim().notEmpty().withMessage('Nama wajib diisi'),
+    body('username').trim().notEmpty().withMessage('Username is required'),
+    body('password').optional().isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+    body('role').isIn(['student', 'lecturer', 'admin']).withMessage('Invalid role'),
+    body('name').trim().notEmpty().withMessage('Name is required'),
 ];
 
 // Get all users
@@ -23,7 +23,7 @@ const getAllUsers = async (req, res) => {
 const getUserById = async (req, res) => {
     try {
         const user = await User.findById(req.params.id).select('-password');
-        if (!user) return res.status(404).json({ error: 'User tidak ditemukan' });
+        if (!user) return res.status(404).json({ error: 'User not found' });
         res.json(user);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -37,15 +37,15 @@ const createUser = async (req, res) => {
         return res.status(400).json({ errors: errors.array() });
     }
     try {
-        const { username, password, role, nama } = req.body;
+        const { username, password, role, name } = req.body;
         const exist = await User.findOne({ username });
-        if (exist) return res.status(400).json({ error: 'Username sudah terdaftar' });
+        if (exist) return res.status(400).json({ error: 'Username already exists' });
         const hashed = password ? await bcrypt.hash(password, 10) : undefined;
-        const user = new User({ username, password: hashed, role, nama });
+        const user = new User({ username, password: hashed, role, name });
         await user.save();
-        res.status(201).json({ message: 'User berhasil dibuat', user: { id: user._id, username, role, nama } });
+        res.status(201).json({ message: 'User created successfully', user: { id: user._id, username, role, name } });
     } catch (err) {
-        res.status(500).json({ error: 'Terjadi kesalahan pada server.' });
+        res.status(500).json({ error: 'Server error.' });
     }
 };
 
@@ -56,14 +56,14 @@ const updateUser = async (req, res) => {
         return res.status(400).json({ errors: errors.array() });
     }
     try {
-        const { username, password, role, nama } = req.body;
-        const update = { username, role, nama };
+        const { username, password, role, name } = req.body;
+        const update = { username, role, name };
         if (password) update.password = await bcrypt.hash(password, 10);
         const user = await User.findByIdAndUpdate(req.params.id, update, { new: true, runValidators: true }).select('-password');
-        if (!user) return res.status(404).json({ error: 'User tidak ditemukan' });
-        res.json({ message: 'User berhasil diupdate', user });
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        res.json({ message: 'User updated successfully', user });
     } catch (err) {
-        res.status(500).json({ error: 'Terjadi kesalahan pada server.' });
+        res.status(500).json({ error: 'Server error.' });
     }
 };
 
@@ -71,8 +71,8 @@ const updateUser = async (req, res) => {
 const deleteUser = async (req, res) => {
     try {
         const user = await User.findByIdAndDelete(req.params.id);
-        if (!user) return res.status(404).json({ error: 'User tidak ditemukan' });
-        res.json({ message: 'User berhasil dihapus' });
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        res.json({ message: 'User deleted successfully' });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

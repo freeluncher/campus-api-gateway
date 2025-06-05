@@ -1,12 +1,12 @@
 const mongoose = require('mongoose');
 
 const TaskSchema = new mongoose.Schema({
-    judul: {
+    title: {
         type: String,
         required: true,
         trim: true
     },
-    deskripsi: {
+    description: {
         type: String,
         required: true,
         trim: true
@@ -17,11 +17,11 @@ const TaskSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['belum', 'proses', 'selesai'],
-        default: 'belum',
+        enum: ['not_started', 'in_progress', 'completed'],
+        default: 'not_started',
         required: true
     },
-    mahasiswa: [{
+    students: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
     }]

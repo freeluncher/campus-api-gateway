@@ -10,7 +10,7 @@ const {
 } = require('../controllers/userController');
 const { authenticate, authorize } = require('../controllers/authMiddleware');
 
-// Semua endpoint hanya untuk admin
+// All endpoints for admin only
 router.get('/', authenticate, authorize('admin'), getAllUsers);
 router.get('/:id', authenticate, authorize('admin'), getUserById);
 router.post('/', authenticate, authorize('admin'), validateUser, createUser);

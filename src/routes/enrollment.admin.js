@@ -8,12 +8,12 @@ const { validateEnrollment } = require('../controllers/enrollmentController');
 router.get('/', authenticate, authorize('admin'), async (req, res) => {
     try {
         const filter = {};
-        if (req.query.mahasiswa) filter.mahasiswa = req.query.mahasiswa;
-        if (req.query.dosen) filter.dosen = req.query.dosen;
-        if (req.query.matkul) filter.matkul = req.query.matkul;
-        if (req.query.tahunAjaran) filter.tahunAjaran = req.query.tahunAjaran;
+        if (req.query.student) filter.student = req.query.student;
+        if (req.query.lecturer) filter.lecturer = req.query.lecturer;
+        if (req.query.course) filter.course = req.query.course;
+        if (req.query.academicYear) filter.academicYear = req.query.academicYear;
         if (req.query.semester) filter.semester = req.query.semester;
-        const data = await Enrollment.find(filter).populate('mahasiswa dosen matkul');
+        const data = await Enrollment.find(filter).populate('student lecturer course');
         res.json(data);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -23,8 +23,8 @@ router.get('/', authenticate, authorize('admin'), async (req, res) => {
 // Get enrollment by ID (admin)
 router.get('/:id', authenticate, authorize('admin'), async (req, res) => {
     try {
-        const data = await Enrollment.findById(req.params.id).populate('mahasiswa dosen matkul');
-        if (!data) return res.status(404).json({ error: 'Enrollment tidak ditemukan' });
+        const data = await Enrollment.findById(req.params.id).populate('student lecturer course');
+        if (!data) return res.status(404).json({ error: 'Enrollment not found' });
         res.json(data);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -34,37 +34,37 @@ router.get('/:id', authenticate, authorize('admin'), async (req, res) => {
 // Create enrollment (admin)
 router.post('/', authenticate, authorize('admin'), validateEnrollment, async (req, res) => {
     try {
-        const { mahasiswa, matkul } = req.body;
-        const course = await require('../models/course').findById(matkul);
-        if (!course) return res.status(404).json({ error: 'Matkul tidak ditemukan' });
-        const exist = await Enrollment.findOne({ mahasiswa, matkul, tahunAjaran: course.tahunAjaran, semester: course.semester });
-        if (exist) return res.status(400).json({ error: 'Sudah terdaftar di matkul ini' });
-        const data = new Enrollment({ mahasiswa, matkul, dosen: course.dosen, tahunAjaran: course.tahunAjaran, semester: course.semester });
+        const { student, course } = req.body;
+        const courseData = await require('../models/course').findById(course);
+        if (!courseData) return res.status(404).json({ error: 'Course not found' });
+        const exist = await Enrollment.findOne({ student, course, academicYear: courseData.academicYear, semester: courseData.semester });
+        if (exist) return res.status(400).json({ error: 'Already enrolled in this course' });
+        const data = new Enrollment({ student, course, lecturer: courseData.lecturer, academicYear: courseData.academicYear, semester: courseData.semester });
         await data.save();
         res.status(201).json(data);
     } catch (err) {
-        res.status(500).json({ error: 'Terjadi kesalahan pada server.' });
+        res.status(500).json({ error: 'Server error.' });
     }
 });
 
 // Update enrollment (admin)
 router.put('/:id', authenticate, authorize('admin'), validateEnrollment, async (req, res) => {
     try {
-        const { mahasiswa, matkul } = req.body;
-        const course = await require('../models/course').findById(matkul);
-        if (!course) return res.status(404).json({ error: 'Matkul tidak ditemukan' });
+        const { student, course } = req.body;
+        const courseData = await require('../models/course').findById(course);
+        if (!courseData) return res.status(404).json({ error: 'Course not found' });
         const update = {
-            mahasiswa,
-            matkul,
-            dosen: course.dosen,
-            tahunAjaran: course.tahunAjaran,
-            semester: course.semester
+            student,
+            course,
+            lecturer: courseData.lecturer,
+            academicYear: courseData.academicYear,
+            semester: courseData.semester
         };
-        const data = await Enrollment.findByIdAndUpdate(req.params.id, update, { new: true, runValidators: true }).populate('mahasiswa dosen matkul');
-        if (!data) return res.status(404).json({ error: 'Enrollment tidak ditemukan' });
+        const data = await Enrollment.findByIdAndUpdate(req.params.id, update, { new: true, runValidators: true }).populate('student lecturer course');
+        if (!data) return res.status(404).json({ error: 'Enrollment not found' });
         res.json(data);
     } catch (err) {
-        res.status(500).json({ error: 'Terjadi kesalahan pada server.' });
+        res.status(500).json({ error: 'Server error.' });
     }
 });
 
@@ -72,8 +72,8 @@ router.put('/:id', authenticate, authorize('admin'), validateEnrollment, async (
 router.delete('/:id', authenticate, authorize('admin'), async (req, res) => {
     try {
         const data = await Enrollment.findByIdAndDelete(req.params.id);
-        if (!data) return res.status(404).json({ error: 'Enrollment tidak ditemukan' });
-        res.json({ message: 'Enrollment berhasil dihapus' });
+        if (!data) return res.status(404).json({ error: 'Enrollment not found' });
+        res.json({ message: 'Enrollment deleted successfully' });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
