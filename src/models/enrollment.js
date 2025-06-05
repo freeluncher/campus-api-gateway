@@ -19,6 +19,12 @@ const EnrollmentSchema = new mongoose.Schema({
         type: String,
         enum: ['odd', 'even'],
         required: true
+    },
+    status: {
+        type: String,
+        enum: ['active', 'dropped'],
+        default: 'active',
+        required: true
     }
 }, {
     timestamps: true
