@@ -120,7 +120,7 @@ const addAttendance = async (req, res) => {
         const scheduleStartMinutes = startHour * 60 + startMinute - 10; // 10 menit sebelum
         const scheduleEndMinutes = startHour * 60 + startMinute + 15; // 15 menit setelah mulai
         // DEBUG LOG
-        console.log('[DEBUG] presensiMinutes:', presensiMinutes, '| scheduleStartMinutes:', scheduleStartMinutes, '| scheduleEndMinutes:', scheduleEndMinutes, '| presensiDate (Asia/Jakarta):', presensiMoment.format(), '| schedule.startTime:', schedule.startTime);
+        // (log waktu presensi dihapus sesuai permintaan)
         if (presensiMinutes < scheduleStartMinutes || presensiMinutes > scheduleEndMinutes) {
             return res.status(403).json({
                 error: 'Attendance not allowed outside allowed time window.',
