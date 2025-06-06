@@ -2,6 +2,7 @@ const Task = require('../models/task');
 const Enrollment = require('../models/enrollment');
 const Course = require('../models/course');
 const { body, validationResult } = require('express-validator');
+const { sendEmail } = require('../utils/email');
 
 // Validasi dan sanitasi input untuk tugas
 const validateTask = [
@@ -44,13 +45,18 @@ const addTask = async (req, res) => {
             course,
             academicYear,
             semester
-        });
+        }).populate('student');
         if (!enrollments.length) {
             return res.status(400).json({ error: 'No students enrolled in this course.' });
         }
-        const students = enrollments.map(e => e.student);
+        const students = enrollments.map(e => e.student._id);
+        const emails = enrollments.map(e => e.student.username).filter(email => email && email.includes('@'));
         const newData = new Task({ title, description, deadline, status, students });
         await newData.save();
+        // Kirim notifikasi email ke semua mahasiswa
+        for (const email of emails) {
+            await sendEmail(email, 'New Task Assigned', `<b>You have a new task:</b> ${title}<br>${description}`);
+        }
         res.status(201).json(newData);
     } catch (err) {
         res.status(500).json({ error: 'Server error.', code: 'SERVER_ERROR' });
