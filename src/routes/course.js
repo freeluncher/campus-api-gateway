@@ -8,7 +8,7 @@ const {
     deleteCourse,
     validateCourse
 } = require('../controllers/courseController');
-const { authenticate, authorize } = require('../controllers/authMiddleware');
+const { authenticate, authorize, permit } = require('../controllers/authMiddleware');
 
 // GET /api/course/available?semester=odd&academicYear=2025/2026
 router.get('/available', authenticate, authorize('student'), async (req, res) => {
@@ -29,10 +29,10 @@ router.get('/available', authenticate, authorize('student'), async (req, res) =>
 });
 
 // All endpoints for admin only
-router.get('/', authenticate, authorize('admin'), getAllCourses);
-router.get('/:id', authenticate, authorize('admin'), getCourseById);
-router.post('/', authenticate, authorize('admin'), validateCourse, createCourse);
-router.put('/:id', authenticate, authorize('admin'), validateCourse, updateCourse);
-router.delete('/:id', authenticate, authorize('admin'), deleteCourse);
+router.get('/', authenticate, authorize('admin'), permit('course:read'), getAllCourses);
+router.get('/:id', authenticate, authorize('admin'), permit('course:read'), getCourseById);
+router.post('/', authenticate, authorize('admin'), permit('course:create'), validateCourse, createCourse);
+router.put('/:id', authenticate, authorize('admin'), permit('course:update'), validateCourse, updateCourse);
+router.delete('/:id', authenticate, authorize('admin'), permit('course:delete'), deleteCourse);
 
 module.exports = router;
