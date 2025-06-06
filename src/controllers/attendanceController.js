@@ -23,7 +23,6 @@ const upload = multer({ storage });
 const validateAttendance = [
     body('student').trim().notEmpty().withMessage('Student is required'),
     body('course').trim().notEmpty().withMessage('Course is required'),
-    body('date').isISO8601().withMessage('Date must be in ISO8601 format (YYYY-MM-DD)'),
     body('status').isIn(['present', 'permission', 'sick', 'absent']).withMessage('Invalid status'),
 ];
 
@@ -44,7 +43,7 @@ const addAttendance = async (req, res) => {
         return res.status(400).json({ errors: errors.array() });
     }
     try {
-        const { student, course, date, status } = req.body;
+        const { student, course, status } = req.body;
         // Cek user role (hanya student yang boleh submit presensi)
         if (!req.user || req.user.role !== 'student') {
             return res.status(403).json({
@@ -53,8 +52,11 @@ const addAttendance = async (req, res) => {
                 detail: 'Attendance can only be submitted by users with student role.'
             });
         }
+        // Ambil tanggal presensi dari waktu server Asia/Jakarta
+        const presensiMoment = moment.tz('Asia/Jakarta');
+        const dateString = presensiMoment.format('YYYY-MM-DD');
         // Cek hari libur/nasional
-        const presensiDate = new Date(date);
+        const presensiDate = new Date(dateString);
         const holiday = await Holiday.findOne({ date: {
             $gte: new Date(presensiDate.setHours(0,0,0,0)),
             $lte: new Date(presensiDate.setHours(23,59,59,999))
@@ -76,9 +78,9 @@ const addAttendance = async (req, res) => {
             });
         }
         // Cek duplikat presensi pada hari yang sama dan course yang sama
-        const startOfDay = new Date(date);
+        const startOfDay = new Date(dateString);
         startOfDay.setHours(0,0,0,0);
-        const endOfDay = new Date(date);
+        const endOfDay = new Date(dateString);
         endOfDay.setHours(23,59,59,999);
         const alreadyPresent = await Attendance.findOne({
             student,
@@ -94,8 +96,7 @@ const addAttendance = async (req, res) => {
         }
         // Validate attendance time against schedule
         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        // Ambil waktu saat ini di Asia/Jakarta
-        const presensiMoment = moment.tz('Asia/Jakarta');
+        // Gunakan presensiMoment yang sudah dideklarasikan di atas
         const currentDay = days[presensiMoment.day()];
         const pad = n => n.toString().padStart(2, '0');
         // Ambil waktu presensi dari Asia/Jakarta (jam dan menit)
@@ -140,8 +141,8 @@ const addAttendance = async (req, res) => {
             }
             proofFile = req.file.filename;
         }
-        // Save attendance with proofFile if available
-        const newData = new Attendance({ student, course, date, status, proof: proofFile });
+        // Simpan attendance dengan tanggal presensi hasil waktu server
+        const newData = new Attendance({ student, course, date: dateString, status, proof: proofFile });
         await newData.save();
         res.status(201).json({
             message: 'Attendance recorded successfully.',
