@@ -31,4 +31,4 @@ coverage/
 # Others
 .env.*.local
 Campus-API-Gateway.postman_collection.json
-
+uploads/

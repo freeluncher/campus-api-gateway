@@ -42,6 +42,9 @@ app.use('/api/parallel-class', parallelClassRoutes);
 const uploadRoutes = require('./routes/upload');
 app.use('/api/upload', uploadRoutes);
 
+const holidayRoutes = require('./routes/holiday');
+app.use('/api/holiday', holidayRoutes);
+
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
