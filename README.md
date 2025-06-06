@@ -5,20 +5,22 @@ A robust, secure, and scalable RESTful API backend for campus management, built 
 ## Features
 
 - **User Management**: Admin can manage students, lecturers, and other admins.
-- **Authentication & Authorization**: JWT-based authentication and role-based access control (admin, lecturer, student).
-- **Course Management**: CRUD operations for courses, with lecturer assignment and academic year/semester support.
-- **Enrollment System**: Students can enroll in available courses; admin can manage all enrollments.
-- **Task Management**: Lecturers can create assignments automatically distributed to enrolled students.
-- **Attendance Tracking**: Students can submit attendance; admin and lecturers can monitor records.
+- **Authentication & Authorization**: JWT-based authentication, role-based access control (admin, lecturer, student), and **granular custom permission** via `permissions` array and `permit(permission)` middleware for fine-grained endpoint protection.
+- **Course Management**: CRUD operations for courses, with multi-lecturer assignment and academic year/semester support.
+- **Parallel Class (Kelas Paralel)**: Manage parallel classes for a course, each with its own lecturers, code, and schedule.
+- **Enrollment System**: Students can enroll/drop courses; admin can manage all enrollments. Enrollment status (`active`/`dropped`) is tracked.
+- **Task Management**: Lecturers can create assignments automatically distributed to enrolled students. **Automatic email notification** (Ethereal) sent to all enrolled students when a new task is created.
+- **Attendance Tracking**: Students can submit attendance (with proof upload for permission/sick); admin and lecturers can monitor records. Attendance is validated against schedule, holidays, and time window (10 min before–15 min after start).
+- **Holiday Management**: Manage national/campus holidays to prevent attendance on those days.
 - **Schedule Management**: Manage and view class schedules.
-- **Validation & Security**: Input validation (express-validator), security headers (helmet), body size limiting, and error handling.
+- **Validation & Security**: Input validation (express-validator), security headers (helmet), body size limiting, error handling, and file upload validation (multer).
 - **API Documentation & Testing**: Designed for easy integration with Postman for automated end-to-end workflow testing.
 
 ## Tech Stack
 - **Node.js** & **Express**
 - **MongoDB** (Mongoose ODM)
 - **JWT** for authentication
-- **express-validator**, **helmet**, **cors**
+- **express-validator**, **helmet**, **cors**, **multer**, **moment-timezone**, **nodemailer** (Ethereal)
 
 ## Project Structure
 ```
@@ -26,7 +28,10 @@ src/
   controllers/      # Business logic for each resource
   models/           # Mongoose schemas and models
   routes/           # Express route definitions
+  utils/            # Utility functions (email, etc)
   index.js          # App entry point and route mounting
+uploads/
+  attendance/       # Uploaded proof files for attendance
 ```
 
 ## Getting Started
@@ -37,7 +42,7 @@ src/
    npm install
    ```
 3. **Configure environment variables**
-   - Copy `.env.example` to `.env` and fill in your MongoDB URI and JWT secret.
+   - Copy `.env.example` to `.env` and fill in your MongoDB URI, JWT secret, and Ethereal email credentials.
 4. **Run the server**
    ```powershell
    npm run dev
@@ -46,51 +51,73 @@ src/
    ```powershell
    npm start
    ```
+5. **Seed initial data (optional but recommended):**
+   - Seed holidays: `node seedHolidays.js`
+   - Create first admin: `node seedAdmin.js`
 
 ## API Endpoints (Summary)
-- `/api/auth` — Register & login
-- `/api/user` — User management (admin only)
-- `/api/course` — Course management (admin only)
-- `/api/enrollment` — Student enrolls course, view enrollments
+- `/api/auth` — Register & login (register always creates student role)
+- `/api/user` — User management (admin only, supports granular permission)
+- `/api/course` — Course management (admin only, multi-lecturer)
+- `/api/parallel-class` — Parallel class management (admin only)
+- `/api/enrollment` — Student enroll/drop course, view enrollments
 - `/api/enrollment/admin` — Admin enrollment management
-- `/api/task` — Task/assignment management
-- `/api/attendance` — Attendance management
+- `/api/task` — Task/assignment management (lecturer/admin, with email notification)
+- `/api/attendance` — Attendance management (student submit, with proof upload)
 - `/api/schedule` — Schedule management
+- `/api/holiday` — Holiday management (admin only)
 
-## Best Practices Implemented
-- **Environment Variables**: All secrets and DB URIs are managed via `.env`.
-- **Modular Codebase**: Separation of concerns for controllers, models, and routes.
-- **Validation & Error Handling**: All input is validated and errors are handled gracefully.
-- **Security**: Helmet, CORS, and body size limits are enforced.
-- **Role-based Access**: Middleware ensures only authorized users can access sensitive endpoints.
-- **Consistent Naming**: All code, endpoints, and fields use English and follow naming conventions.
-- **Automated Testing Ready**: Designed for easy integration with Postman Collection Runner for workflow testing.
+## Key Features & Security Updates (2025-06-06)
 
-## [2025-06-06] Attendance Date Auto-Assignment Update
+### Parallel Class (Kelas Paralel)
+- Support for managing parallel classes per course, each with its own lecturers, code, and schedule.
 
-- **Attendance date is now automatically set by the server** using the current time in Asia/Jakarta timezone. The client does not need to send the `date` field in the attendance request.
-- **Attendance validation** (holiday, duplicate, schedule window) now always uses the server's local date and time.
-- **Request Example (form-data):**
-  - `student`: ObjectId of student
-  - `course`: ObjectId of course
-  - `status`: present | permission | sick | absent
-  - `proof`: (file, required if status is permission/sick)
-- **Backward compatibility:** Old requests with a `date` field will ignore the value; the server always uses its own date.
-- **Security:** Prevents backdate/forward-date attendance manipulation from the client.
+### Granular Custom Permission
+- Each user has a `permissions` array (e.g. `attendance:create`, `user:update`).
+- Middleware `permit(permission)` enforces fine-grained access control on sensitive endpoints.
+- Admin always has all permissions by default.
 
-See the API usage section for updated request examples.
+### Attendance Validation & Proof Upload
+- Attendance can only be submitted by students with active enrollment.
+- Attendance is only allowed on scheduled days, within a 10-min-before to 15-min-after window (Asia/Jakarta timezone).
+- Attendance is blocked on holidays (see `/api/holiday`).
+- Duplicate attendance for the same course and day is prevented.
+- If status is `permission` or `sick`, a proof file (image/pdf) must be uploaded (form-data, field `proof`).
 
-## [2025-06-06] Security & Registration Update
+### Holiday Management
+- Holidays are managed via `/api/holiday` and seeded with `seedHolidays.js`.
+- Attendance is automatically blocked on holidays.
 
-- **Public registration endpoint now always creates users with role `student`.**
-- **Input role from user is ignored** on registration, preventing privilege escalation.
-- **Admin/lecturer accounts can only be created by an existing admin** via the `/api/user` endpoint (admin only).
-- **How to create the first admin:**
-  - Use the provided `seedAdmin.js` script to safely create the first admin user directly in the database.
-  - After the first admin exists, all privileged user management must be done via admin endpoints.
-- **Security best practice:** Never open public registration for admin/lecturer roles.
+### Email Notification (Ethereal)
+- When a new task is created, all enrolled students receive an automatic email notification (using free Ethereal SMTP, see `.env`).
+- Email utility is in `src/utils/email.js`.
 
-See the API usage and security section for more details.
+### Security & Registration
+- Public registration always creates users with role `student` (role input is ignored).
+- Only admin can create admin/lecturer accounts via `/api/user`.
+- Use `seedAdmin.js` to create the first admin safely.
+- All sensitive endpoints protected by both role and granular permission middleware.
+- All error responses include a code for easier debugging.
+
+### File Upload & Validation
+- Attendance proof files are uploaded using `multer` and stored in `uploads/attendance/`.
+- (Recommended) Add further validation for file type/size in production.
+
+### Testing & Workflow
+- All new features are tested and documented for Postman workflow.
+- See API usage section for request/response examples.
+
+## Changelog (2025-06-06)
+- Refactor all naming to English (model, controller, route, field)
+- Add: ParallelClass model, controller, route
+- Add: `permissions` field to User, granular permission middleware
+- Add: Holiday model, controller, route, and seed script
+- Add: Attendance proof upload, validation, and time window logic
+- Add: Automatic email notification (Ethereal) for new tasks
+- Add: Enrollment status (`active`/`dropped`), drop course endpoint
+- Add: Security best practices, error code in all responses
+- Add: Seed scripts for admin and holidays
+- Update: All endpoints to use English naming and consistent error handling
 
 ## Contribution
 Pull requests are welcome! Please follow the existing code style and best practices.
