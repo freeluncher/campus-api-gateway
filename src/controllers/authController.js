@@ -5,8 +5,10 @@ const jwt = require('jsonwebtoken');
 // Register user
 const register = async (req, res) => {
     try {
-        const { username, password, role, name } = req.body;
-        if (!username || !password || !role || !name) {
+        const { username, password, name } = req.body;
+        // Force role to 'student' for all public registration
+        const role = 'student';
+        if (!username || !password || !name) {
             return res.status(400).json({ error: 'All fields are required' });
         }
         const exist = await User.findOne({ username });
