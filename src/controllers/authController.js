@@ -8,13 +8,22 @@ const register = async (req, res) => {
         const { username, password, name } = req.body;
         // Force role to 'student' for all public registration
         const role = 'student';
+        // Default permissions for student
+        const permissions = [
+            'enrollment:create',
+            'enrollment:read',
+            'enrollment:drop',
+            'attendance:create',
+            'attendance:read',
+            // Tambahkan permission lain jika perlu
+        ];
         if (!username || !password || !name) {
             return res.status(400).json({ error: 'All fields are required', code: 'FIELDS_REQUIRED' });
         }
         const exist = await User.findOne({ username });
         if (exist) return res.status(400).json({ error: 'Username already exists', code: 'USERNAME_EXISTS' });
         const hashed = await bcrypt.hash(password, 10);
-        const user = new User({ username, password: hashed, role, name });
+        const user = new User({ username, password: hashed, role, name, permissions });
         await user.save();
         res.status(201).json({ message: 'Registration successful' });
     } catch (err) {
