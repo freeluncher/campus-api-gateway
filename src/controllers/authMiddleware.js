@@ -23,4 +23,13 @@ const authorize = (...roles) => (req, res, next) => {
     next();
 };
 
-module.exports = { authenticate, authorize };
+// Middleware: check custom permission
+const permit = (permission) => (req, res, next) => {
+    if (req.user.role === 'admin') return next(); // admin always allowed
+    if (!req.user.permissions || !req.user.permissions.includes(permission)) {
+        return res.status(403).json({ error: 'Permission denied', code: 'PERMISSION_DENIED' });
+    }
+    next();
+};
+
+module.exports = { authenticate, authorize, permit };
