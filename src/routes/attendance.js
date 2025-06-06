@@ -6,15 +6,14 @@ const {
     getAttendanceById,
     updateAttendance,
     deleteAttendance,
-    validateAttendance,
-    upload
+    validateAttendance
 } = require('../controllers/attendanceController');
 const { authenticate, authorize, permit } = require('../controllers/authMiddleware');
 
 // GET /api/attendance
 router.get('/', authenticate, permit('attendance:read'), getAllAttendance);
-// POST /api/attendance (with file upload for permission/sick)
-router.post('/', authenticate, authorize('student'), permit('attendance:create'), upload.single('proof'), validateAttendance, addAttendance);
+// POST /api/attendance (now expects proof as path string, not file)
+router.post('/', authenticate, authorize('student'), permit('attendance:create'), validateAttendance, addAttendance);
 // GET /api/attendance/:id
 router.get('/:id', authenticate, permit('attendance:read'), getAttendanceById);
 // PUT /api/attendance/:id
