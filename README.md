@@ -80,6 +80,18 @@ src/
 
 See the API usage section for updated request examples.
 
+## [2025-06-06] Security & Registration Update
+
+- **Public registration endpoint now always creates users with role `student`.**
+- **Input role from user is ignored** on registration, preventing privilege escalation.
+- **Admin/lecturer accounts can only be created by an existing admin** via the `/api/user` endpoint (admin only).
+- **How to create the first admin:**
+  - Use the provided `seedAdmin.js` script to safely create the first admin user directly in the database.
+  - After the first admin exists, all privileged user management must be done via admin endpoints.
+- **Security best practice:** Never open public registration for admin/lecturer roles.
+
+See the API usage and security section for more details.
+
 ## Contribution
 Pull requests are welcome! Please follow the existing code style and best practices.
 
