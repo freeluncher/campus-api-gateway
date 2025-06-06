@@ -1,3 +1,6 @@
+# Documentation
+[![Postman Docs](https://img.shields.io/badge/Postman-API%20Docs-orange?logo=postman)](https://documenter.getpostman.com/view/44638871/2sB2x2LEjr)
+
 # Campus API Gateway
 
 A robust, secure, and scalable RESTful API backend for campus management, built with Node.js, Express, and MongoDB. This project implements best practices for authentication, role-based access, data validation, and modular architecture, supporting workflows for students, lecturers, and administrators.
