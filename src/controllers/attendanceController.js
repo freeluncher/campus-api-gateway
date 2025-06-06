@@ -5,6 +5,7 @@ const Holiday = require('../models/holiday');
 const { body, validationResult } = require('express-validator');
 const multer = require('multer');
 const path = require('path');
+const moment = require('moment-timezone');
 
 // Setup multer for file upload (for permission/sick proof)
 const storage = multer.diskStorage({
@@ -93,9 +94,14 @@ const addAttendance = async (req, res) => {
         }
         // Validate attendance time against schedule
         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        const currentDay = days[presensiDate.getDay()];
+        // Ambil waktu saat ini di Asia/Jakarta
+        const presensiMoment = moment.tz('Asia/Jakarta');
+        const currentDay = days[presensiMoment.day()];
         const pad = n => n.toString().padStart(2, '0');
-        const currentTime = pad(presensiDate.getHours()) + ':' + pad(presensiDate.getMinutes());
+        // Ambil waktu presensi dari Asia/Jakarta (jam dan menit)
+        const presensiHour = presensiMoment.hour();
+        const presensiMinute = presensiMoment.minute();
+        const currentTime = pad(presensiHour) + ':' + pad(presensiMinute);
         // Cari jadwal yang cocok (harus ada jadwal di hari itu)
         const schedule = await Schedule.findOne({
             course,
@@ -108,11 +114,13 @@ const addAttendance = async (req, res) => {
                 detail: `No schedule for course on ${currentDay}`
             });
         }
-        // Validasi range waktu presensi (misal: 10 menit sebelum sampai 15 menit setelah jam mulai)
+        // Validasi range waktu presensi (10 menit sebelum sampai 15 menit setelah jam mulai, waktu lokal)
         const [startHour, startMinute] = schedule.startTime.split(':').map(Number);
-        const presensiMinutes = presensiDate.getHours() * 60 + presensiDate.getMinutes();
+        const presensiMinutes = presensiHour * 60 + presensiMinute;
         const scheduleStartMinutes = startHour * 60 + startMinute - 10; // 10 menit sebelum
         const scheduleEndMinutes = startHour * 60 + startMinute + 15; // 15 menit setelah mulai
+        // DEBUG LOG
+        console.log('[DEBUG] presensiMinutes:', presensiMinutes, '| scheduleStartMinutes:', scheduleStartMinutes, '| scheduleEndMinutes:', scheduleEndMinutes, '| presensiDate (Asia/Jakarta):', presensiMoment.format(), '| schedule.startTime:', schedule.startTime);
         if (presensiMinutes < scheduleStartMinutes || presensiMinutes > scheduleEndMinutes) {
             return res.status(403).json({
                 error: 'Attendance not allowed outside allowed time window.',
