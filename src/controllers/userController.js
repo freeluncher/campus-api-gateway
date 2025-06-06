@@ -6,6 +6,7 @@ const validateUser = [
     body('username').trim().notEmpty().withMessage('Username is required'),
     body('password').optional().isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
     body('role').isIn(['student', 'lecturer', 'admin']).withMessage('Invalid role'),
+    body('permissions').optional().isArray().withMessage('Permissions must be an array of strings'),
     body('name').trim().notEmpty().withMessage('Name is required'),
 ];
 
@@ -37,13 +38,13 @@ const createUser = async (req, res) => {
         return res.status(400).json({ errors: errors.array() });
     }
     try {
-        const { username, password, role, name } = req.body;
+        const { username, password, role, name, permissions } = req.body;
         const exist = await User.findOne({ username });
         if (exist) return res.status(400).json({ error: 'Username already exists' });
         const hashed = password ? await bcrypt.hash(password, 10) : undefined;
-        const user = new User({ username, password: hashed, role, name });
+        const user = new User({ username, password: hashed, role, name, permissions });
         await user.save();
-        res.status(201).json({ message: 'User created successfully', user: { id: user._id, username, role, name } });
+        res.status(201).json({ message: 'User created successfully', user: { id: user._id, username, role, name, permissions: user.permissions } });
     } catch (err) {
         res.status(500).json({ error: 'Server error.', code: 'SERVER_ERROR' });
     }
@@ -56,8 +57,8 @@ const updateUser = async (req, res) => {
         return res.status(400).json({ errors: errors.array() });
     }
     try {
-        const { username, password, role, name } = req.body;
-        const update = { username, role, name };
+        const { username, password, role, name, permissions } = req.body;
+        const update = { username, role, name, permissions };
         if (password) update.password = await bcrypt.hash(password, 10);
         const user = await User.findByIdAndUpdate(req.params.id, update, { new: true, runValidators: true }).select('-password');
         if (!user) return res.status(404).json({ error: 'User not found' });

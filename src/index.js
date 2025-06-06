@@ -36,6 +36,9 @@ app.use('/api/user', userRoutes);
 const courseRoutes = require('./routes/course');
 app.use('/api/course', courseRoutes);
 
+const parallelClassRoutes = require('./routes/parallelClass');
+app.use('/api/parallel-class', parallelClassRoutes);
+
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
