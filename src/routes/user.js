@@ -8,13 +8,13 @@ const {
     deleteUser,
     validateUser
 } = require('../controllers/userController');
-const { authenticate, authorize } = require('../controllers/authMiddleware');
+const { authenticate, authorize, permit } = require('../controllers/authMiddleware');
 
 // All endpoints for admin only
 router.get('/', authenticate, authorize('admin'), getAllUsers);
 router.get('/:id', authenticate, authorize('admin'), getUserById);
-router.post('/', authenticate, authorize('admin'), validateUser, createUser);
-router.put('/:id', authenticate, authorize('admin'), validateUser, updateUser);
-router.delete('/:id', authenticate, authorize('admin'), deleteUser);
+router.post('/', authenticate, authorize('admin'), permit('user:create'), validateUser, createUser);
+router.put('/:id', authenticate, authorize('admin'), permit('user:update'), validateUser, updateUser);
+router.delete('/:id', authenticate, authorize('admin'), permit('user:delete'), deleteUser);
 
 module.exports = router;

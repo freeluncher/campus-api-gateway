@@ -9,17 +9,17 @@ const {
     validateAttendance,
     upload
 } = require('../controllers/attendanceController');
-const { authenticate, authorize } = require('../controllers/authMiddleware');
+const { authenticate, authorize, permit } = require('../controllers/authMiddleware');
 
 // GET /api/attendance
-router.get('/', authenticate, getAllAttendance);
+router.get('/', authenticate, permit('attendance:read'), getAllAttendance);
 // POST /api/attendance (with file upload for permission/sick)
-router.post('/', authenticate, authorize('student'), upload.single('proof'), validateAttendance, addAttendance);
+router.post('/', authenticate, authorize('student'), permit('attendance:create'), upload.single('proof'), validateAttendance, addAttendance);
 // GET /api/attendance/:id
-router.get('/:id', authenticate, getAttendanceById);
+router.get('/:id', authenticate, permit('attendance:read'), getAttendanceById);
 // PUT /api/attendance/:id
-router.put('/:id', authenticate, authorize('student', 'admin'), validateAttendance, updateAttendance);
+router.put('/:id', authenticate, authorize('student', 'admin'), permit('attendance:update'), validateAttendance, updateAttendance);
 // DELETE /api/attendance/:id
-router.delete('/:id', authenticate, authorize('admin'), deleteAttendance);
+router.delete('/:id', authenticate, authorize('admin'), permit('attendance:delete'), deleteAttendance);
 
 module.exports = router;
