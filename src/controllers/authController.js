@@ -9,16 +9,16 @@ const register = async (req, res) => {
         // Force role to 'student' for all public registration
         const role = 'student';
         if (!username || !password || !name) {
-            return res.status(400).json({ error: 'All fields are required' });
+            return res.status(400).json({ error: 'All fields are required', code: 'FIELDS_REQUIRED' });
         }
         const exist = await User.findOne({ username });
-        if (exist) return res.status(400).json({ error: 'Username already exists' });
+        if (exist) return res.status(400).json({ error: 'Username already exists', code: 'USERNAME_EXISTS' });
         const hashed = await bcrypt.hash(password, 10);
         const user = new User({ username, password: hashed, role, name });
         await user.save();
         res.status(201).json({ message: 'Registration successful' });
     } catch (err) {
-        res.status(500).json({ error: 'Server error.' });
+        res.status(500).json({ error: 'Server error.', code: 'SERVER_ERROR' });
     }
 };
 
@@ -26,14 +26,17 @@ const register = async (req, res) => {
 const login = async (req, res) => {
     try {
         const { username, password } = req.body;
+        if (!username || !password) {
+            return res.status(400).json({ error: 'All fields are required', code: 'FIELDS_REQUIRED' });
+        }
         const user = await User.findOne({ username });
-        if (!user) return res.status(400).json({ error: 'Invalid username/password' });
+        if (!user) return res.status(400).json({ error: 'Invalid username/password', code: 'INVALID_CREDENTIALS' });
         const match = await bcrypt.compare(password, user.password);
-        if (!match) return res.status(400).json({ error: 'Invalid username/password' });
+        if (!match) return res.status(400).json({ error: 'Invalid username/password', code: 'INVALID_CREDENTIALS' });
         const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
         res.json({ token, user: { id: user._id, username: user.username, role: user.role, name: user.name } });
     } catch (err) {
-        res.status(500).json({ error: 'Server error.' });
+        res.status(500).json({ error: 'Server error.', code: 'SERVER_ERROR' });
     }
 };
 

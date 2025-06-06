@@ -18,7 +18,7 @@ const getAllCourses = async (req, res) => {
         const data = await Course.find(filter).populate('lecturers', '-password');
         res.json(data);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: 'Server error.', code: 'SERVER_ERROR' });
     }
 };
 
@@ -29,7 +29,7 @@ const getCourseById = async (req, res) => {
         if (!data) return res.status(404).json({ error: 'Course not found' });
         res.json(data);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: 'Server error.', code: 'SERVER_ERROR' });
     }
 };
 
@@ -47,7 +47,7 @@ const createCourse = async (req, res) => {
         await course.save();
         res.status(201).json(course);
     } catch (err) {
-        res.status(500).json({ error: 'Server error.' });
+        res.status(500).json({ error: 'Server error.', code: 'SERVER_ERROR' });
     }
 };
 
@@ -67,7 +67,7 @@ const updateCourse = async (req, res) => {
         if (!course) return res.status(404).json({ error: 'Course not found' });
         res.json(course);
     } catch (err) {
-        res.status(500).json({ error: 'Server error.' });
+        res.status(500).json({ error: 'Server error.', code: 'SERVER_ERROR' });
     }
 };
 
@@ -78,7 +78,7 @@ const deleteCourse = async (req, res) => {
         if (!course) return res.status(404).json({ error: 'Course not found' });
         res.json({ message: 'Course deleted successfully' });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: 'Server error.', code: 'SERVER_ERROR' });
     }
 };
 

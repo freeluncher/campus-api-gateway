@@ -17,7 +17,7 @@ const getAllSchedules = async (req, res) => {
         const data = await Schedule.find().sort({ day: 1, startTime: 1 });
         res.json(data);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: 'Server error.', code: 'SERVER_ERROR' });
     }
 };
 
@@ -33,7 +33,7 @@ const addSchedule = async (req, res) => {
         await newData.save();
         res.status(201).json(newData);
     } catch (err) {
-        res.status(500).json({ error: 'Server error.' });
+        res.status(500).json({ error: 'Server error.', code: 'SERVER_ERROR' });
     }
 };
 
@@ -44,7 +44,7 @@ const getScheduleById = async (req, res) => {
         if (!data) return res.status(404).json({ error: 'Data not found' });
         res.json(data);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: 'Server error.', code: 'SERVER_ERROR' });
     }
 };
 
@@ -64,7 +64,7 @@ const updateSchedule = async (req, res) => {
         if (!updated) return res.status(404).json({ error: 'Data not found' });
         res.json(updated);
     } catch (err) {
-        res.status(500).json({ error: 'Server error.' });
+        res.status(500).json({ error: 'Server error.', code: 'SERVER_ERROR' });
     }
 };
 
@@ -75,7 +75,7 @@ const deleteSchedule = async (req, res) => {
         if (!deleted) return res.status(404).json({ error: 'Data not found' });
         res.json({ message: 'Data deleted successfully' });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: 'Server error.', code: 'SERVER_ERROR' });
     }
 };
 
