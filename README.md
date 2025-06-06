@@ -66,6 +66,20 @@ src/
 - **Consistent Naming**: All code, endpoints, and fields use English and follow naming conventions.
 - **Automated Testing Ready**: Designed for easy integration with Postman Collection Runner for workflow testing.
 
+## [2025-06-06] Attendance Date Auto-Assignment Update
+
+- **Attendance date is now automatically set by the server** using the current time in Asia/Jakarta timezone. The client does not need to send the `date` field in the attendance request.
+- **Attendance validation** (holiday, duplicate, schedule window) now always uses the server's local date and time.
+- **Request Example (form-data):**
+  - `student`: ObjectId of student
+  - `course`: ObjectId of course
+  - `status`: present | permission | sick | absent
+  - `proof`: (file, required if status is permission/sick)
+- **Backward compatibility:** Old requests with a `date` field will ignore the value; the server always uses its own date.
+- **Security:** Prevents backdate/forward-date attendance manipulation from the client.
+
+See the API usage section for updated request examples.
+
 ## Contribution
 Pull requests are welcome! Please follow the existing code style and best practices.
 
