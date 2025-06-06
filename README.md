@@ -1,6 +1,18 @@
 # Documentation
 [![Postman Docs](https://img.shields.io/badge/Postman-API%20Docs-orange?logo=postman)](https://documenter.getpostman.com/view/44638871/2sB2x2LEjr)
 
+# Tech Stack
+[![Node.js](https://img.shields.io/badge/Node.js-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express-000000?logo=express&logoColor=white)](https://expressjs.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![JWT](https://img.shields.io/badge/JWT-black?logo=jsonwebtokens&logoColor=white)](https://jwt.io/)
+[![Mongoose](https://img.shields.io/badge/Mongoose-880000?logo=mongoose&logoColor=white)](https://mongoosejs.com/)
+[![Helmet](https://img.shields.io/badge/Helmet-000000?logo=helmet&logoColor=white)](https://helmetjs.github.io/)
+[![CORS](https://img.shields.io/badge/CORS-00599C?logo=cors&logoColor=white)](https://expressjs.com/en/resources/middleware/cors.html)
+[![Multer](https://img.shields.io/badge/Multer-FFCA28?logo=multer&logoColor=black)](https://github.com/expressjs/multer)
+[![Moment Timezone](https://img.shields.io/badge/Moment%20Timezone-000000?logo=moment&logoColor=white)](https://momentjs.com/timezone/)
+[![Nodemailer](https://img.shields.io/badge/Nodemailer-009688?logo=maildotru&logoColor=white)](https://nodemailer.com/)
+
 # Campus API Gateway
 
 A robust, secure, and scalable RESTful API backend for campus management, built with Node.js, Express, and MongoDB. This project implements best practices for authentication, role-based access, data validation, and modular architecture, supporting workflows for students, lecturers, and administrators.
