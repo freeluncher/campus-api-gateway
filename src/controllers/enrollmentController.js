@@ -25,7 +25,7 @@ const enrollCourse = async (req, res) => {
         await data.save();
         res.status(201).json(data);
     } catch (err) {
-        res.status(500).json({ error: 'Server error.' });
+        res.status(500).json({ error: 'Server error.', code: 'SERVER_ERROR' });
     }
 };
 
@@ -40,7 +40,7 @@ const getEnrollments = async (req, res) => {
         const data = await Enrollment.find(filter).populate('student course');
         res.json(data);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: err.message, code: 'SERVER_ERROR' });
     }
 };
 
@@ -58,7 +58,7 @@ const dropCourse = async (req, res) => {
         await enrollment.save();
         res.json({ message: 'Course dropped successfully.', enrollment });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: err.message, code: 'SERVER_ERROR' });
     }
 };
 

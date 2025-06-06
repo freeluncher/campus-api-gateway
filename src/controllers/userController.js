@@ -15,7 +15,7 @@ const getAllUsers = async (req, res) => {
         const users = await User.find().select('-password');
         res.json(users);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: err.message, code: 'SERVER_ERROR' });
     }
 };
 
@@ -26,7 +26,7 @@ const getUserById = async (req, res) => {
         if (!user) return res.status(404).json({ error: 'User not found' });
         res.json(user);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: err.message, code: 'SERVER_ERROR' });
     }
 };
 
@@ -45,7 +45,7 @@ const createUser = async (req, res) => {
         await user.save();
         res.status(201).json({ message: 'User created successfully', user: { id: user._id, username, role, name } });
     } catch (err) {
-        res.status(500).json({ error: 'Server error.' });
+        res.status(500).json({ error: 'Server error.', code: 'SERVER_ERROR' });
     }
 };
 
@@ -63,7 +63,7 @@ const updateUser = async (req, res) => {
         if (!user) return res.status(404).json({ error: 'User not found' });
         res.json({ message: 'User updated successfully', user });
     } catch (err) {
-        res.status(500).json({ error: 'Server error.' });
+        res.status(500).json({ error: 'Server error.', code: 'SERVER_ERROR' });
     }
 };
 
@@ -74,7 +74,7 @@ const deleteUser = async (req, res) => {
         if (!user) return res.status(404).json({ error: 'User not found' });
         res.json({ message: 'User deleted successfully' });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: err.message, code: 'SERVER_ERROR' });
     }
 };
 
