@@ -42,8 +42,9 @@ const login = async (req, res) => {
         if (!user) return res.status(400).json({ error: 'Invalid username/password', code: 'INVALID_CREDENTIALS' });
         const match = await bcrypt.compare(password, user.password);
         if (!match) return res.status(400).json({ error: 'Invalid username/password', code: 'INVALID_CREDENTIALS' });
-        const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
-        res.json({ token, user: { id: user._id, username: user.username, role: user.role, name: user.name } });
+        // Sertakan permissions ke dalam payload JWT dan response
+        const token = jwt.sign({ id: user._id, role: user.role, permissions: user.permissions }, process.env.JWT_SECRET, { expiresIn: '1d' });
+        res.json({ token, user: { id: user._id, username: user.username, role: user.role, name: user.name, permissions: user.permissions } });
     } catch (err) {
         res.status(500).json({ error: 'Server error.', code: 'SERVER_ERROR' });
     }
