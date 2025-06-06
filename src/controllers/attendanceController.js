@@ -3,27 +3,15 @@ const Enrollment = require('../models/enrollment');
 const Schedule = require('../models/schedule');
 const Holiday = require('../models/holiday');
 const { body, validationResult } = require('express-validator');
-const multer = require('multer');
 const path = require('path');
 const moment = require('moment-timezone');
-
-// Setup multer for file upload (for permission/sick proof)
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, path.join(__dirname, '../uploads/attendance'));
-    },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + '-' + file.originalname);
-    }
-});
-const upload = multer({ storage });
 
 // Validation and sanitization for attendance
 const validateAttendance = [
     body('student').trim().notEmpty().withMessage('Student is required'),
     body('course').trim().notEmpty().withMessage('Course is required'),
     body('status').isIn(['present', 'permission', 'sick', 'absent']).withMessage('Invalid status'),
+    body('proof').optional().isString().withMessage('Proof must be a string path'),
 ];
 
 // Get all attendance
@@ -43,7 +31,7 @@ const addAttendance = async (req, res) => {
         return res.status(400).json({ errors: errors.array() });
     }
     try {
-        const { student, course, status } = req.body;
+        const { student, course, status, proof } = req.body;
         // Cek user role (hanya student yang boleh submit presensi)
         if (!req.user || req.user.role !== 'student') {
             return res.status(403).json({
@@ -129,20 +117,20 @@ const addAttendance = async (req, res) => {
                 detail: `Attendance allowed from ${pad(Math.floor(scheduleStartMinutes/60))}:${pad(scheduleStartMinutes%60)} to ${pad(Math.floor(scheduleEndMinutes/60))}:${pad(scheduleEndMinutes%60)}`
             });
         }
-        // If status is 'permission' or 'sick', require file proof
-        let proofFile = null;
+        // If status is 'permission' or 'sick', require proof path
+        let proofPath = null;
         if (['permission', 'sick'].includes(status)) {
-            if (!req.file) {
+            if (!proof || typeof proof !== 'string') {
                 return res.status(400).json({
-                    error: 'Proof file is required for permission or sick status.',
+                    error: 'Proof path is required for permission or sick status.',
                     code: 'PROOF_REQUIRED',
-                    detail: 'Please upload a file as proof.'
+                    detail: 'Please upload file first and submit the path.'
                 });
             }
-            proofFile = req.file.filename;
+            proofPath = proof;
         }
         // Simpan attendance dengan tanggal presensi hasil waktu server
-        const newData = new Attendance({ student, course, date: dateString, status, proof: proofFile });
+        const newData = new Attendance({ student, course, date: dateString, status, proof: proofPath });
         await newData.save();
         res.status(201).json({
             message: 'Attendance recorded successfully.',
@@ -201,6 +189,5 @@ module.exports = {
     getAttendanceById,
     updateAttendance,
     deleteAttendance,
-    validateAttendance,
-    upload
+    validateAttendance
 };
